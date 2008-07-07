@@ -1,0 +1,20 @@
+lib/Perl/Analysis/Static/Database.pm
+lib/Perl/Analysis/Static/DBI.pm
+lib/Perl/Analysis/Static/File.pm
+lib/Perl/Analysis/Static/FileList.pm
+lib/Perl/Analysis/Static/Log.pm
+lib/Perl/Analysis/Static/Plugin.pm
+lib/Perl/Analysis/Static/Plugin/Location.pm
+lib/Perl/Analysis/Static/Plugin/Location/Counter.pm
+lib/Perl/Analysis/Static/Plugin/Location/FunctionCall.pm
+lib/Perl/Analysis/Static/Plugin/OncePerFile.pm
+lib/Perl/Analysis/Static/Plugin/OncePerFile/One.pm
+lib/Perl/Analysis/Static/Plugins.pm
+Makefile.PL
+MANIFEST			This list of files
+README
+run.sh
+scripts/analyze.pl
+t/00-use.t
+TODO
+META.yml                                 Module meta-data (added by MakeMaker)

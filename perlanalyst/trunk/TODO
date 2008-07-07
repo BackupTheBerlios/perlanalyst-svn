@@ -1,0 +1,85 @@
+Plugins:
+
+Funktionsdeklaration
+(Name, Starzeile, Endzeile)
+
+Block
+(Startzeile, Endzeile)
+
+Package
+(Startzeile, Endzeile)
+
+Deklaration von Paketvariablen
+
+Deklaration lexikalischer Variablen
+
+Verwendung von Variablen
+
+Modulimport
+
+Symboltabellenmanipulation
+
+voll qualifizierter Paktevariablenzugriff
+
+Zuweisung
+
+
+Sonstiges
+---------
+
+Plugins höherer Ordnung einführen
+---------------------------------
+
+ Plugins benötigen Daten anderer
+Plugins und werden daher nach diesen ausgeführt. Plugin höherer Ordnung
+hat Liste von Plugins, die vorher ausgeführt werden müssen.
+
+Beispiele für Plugins höherer Ordnung:
+
+Ermittlung freier Variablen in einem Block. Basiert auf Block und
+Verwendung von Variablen und Deklaration von Variablen (lexikalisch
+). Variablen, die verwendet und nicht lexikalisch sind, sind frei und
+können von einem refactoring-Werkzeug als Argumente einer Funktion
+vorgeschlagen werden. 
+
+weiteres: Symbolimport. ein Modul importiert aus einem Modul B
+Symbole, wenn Modul B von Exporter abgeleitet ist, EXPORT oder EXPORT_OK
+setzt und nicht import() überschreibt. Das ist die einfache Art, dies
+festzustellen :-)  Schwierig wird es, wenn import überschrieben wird oder
+nicht von Exporter abgeleitet wird. Dann muss man sich import() ansehen
+und feststellen, ob die Symboltabelle manipuliert wird...
+ 
+
+Ein Plugin kann mehrere Tabellen befüllen
+-----------------------------------------
+
+Beispiel: Ermittlung von 'use MODULE LISTE'.
+
+Das befüllt ja vermutlich die Tabelle "Moduleimport" (Modul A importiert
+B) und die Tabelle "Symbolimport" (Modul A importiert die Symbole a,
+b und c).
+
+Wahrscheinlich wäre es pfiffig, die Ideen "ich analysiere" und "ich
+bin eine Tabelle" auseinanderzuziehen. Das eine ist ein Analyzer, das
+andere Table.  Ein Analyzer könnte dann sowas zurückgeben:
+
+{
+	table_a => [$result1, $result2],
+    table_b => [$result1, $result2, $result3]
+}
+
+Das liest sich so: table_a solle mit zwei Ergebnissen befüllt wreden,
+table_b mit dreien.
+
+
+Konfigurationsdatei
+-------------------
+
+Die gibt es noch nicht ;-(
+
+- Angabe der zu erzeugenden Datei
+- Welche Verzeichnisse sollen untersucht werden?
+- Welche nicht?
+- Namensmuster für Dateien
+- Sollen alle Dateien in einem Verzeichnis untersucht werden?
+

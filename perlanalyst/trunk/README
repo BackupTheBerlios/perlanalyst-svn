@@ -1,0 +1,11 @@
+Perl::Critic performs static analysis to criticize perl source.
+
+Perl::Analysis::Static performs static analysis on perl documents
+(in the PPI sense) and stores its results in a database which can
+be queried by any other tool.
+
+Depending applications may be a documentation generator like doxygen,
+source refactoring tools or plain analysis tools that tell you where
+the data flows.
+
+

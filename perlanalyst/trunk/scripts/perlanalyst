@@ -1,0 +1,25 @@
+#!/usr/bin/perl
+
+use Perl::Analysis::Static::Log qw(set_debug debug);
+use Perl::Analysis::Static::Database qw(set_database_file
+create_tables connect_to_database);
+use Perl::Analysis::Static::Plugins qw(load_plugins);
+use Perl::Analysis::Static::FileList qw(analyze_directory);
+
+unless ($ARGV[0]) {
+	die 'Which directory am I supposed to look in?';
+}
+
+# yes, we want debugging output
+set_debug();
+
+set_database_file("$ENV{HOME}/analysis.sqlite");
+
+connect_to_database();
+
+load_plugins();
+
+create_tables();
+
+# analyze a directory of Perl documents
+analyze_directory($ARGV[0]);

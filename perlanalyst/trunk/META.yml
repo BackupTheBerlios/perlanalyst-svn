@@ -1,0 +1,19 @@
+--- #YAML:1.0
+name:                Perl-Analysis-Static
+version:             0.001
+abstract:            Static analysis of Perl documents
+license:             perl
+generated_by:        ExtUtils::MakeMaker version 6.36
+distribution_type:   module
+requires:     
+    Class::DBI:                    0
+    DBD::SQLite:                   0
+    File::Find::Rule:              0
+    Module::Pluggable:             0
+    Perl::Critic:                  0
+    PPI:                           0
+meta-spec:
+    url:     http://module-build.sourceforge.net/META-spec-v1.2.html
+    version: 1.2
+author:
+    - Gregor Goldbach <ggoldbach@cpan.org>
