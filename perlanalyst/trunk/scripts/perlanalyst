@@ -4,7 +4,8 @@ use Perl::Analysis::Static::Log qw(set_debug debug);
 use Perl::Analysis::Static::Database qw(set_database_file
 create_tables connect_to_database);
 use Perl::Analysis::Static::Plugins qw(load_plugins);
-use Perl::Analysis::Static::FileList qw(analyze_directory);
+use Perl::Analysis::Static::File qw(add_directory);
+use Perl::Analysis::Static::Analysis qw(analyze);
 
 unless ($ARGV[0]) {
 	die 'Which directory am I supposed to look in?';
@@ -21,5 +22,8 @@ load_plugins();
 
 create_tables();
 
-# analyze a directory of Perl documents
-analyze_directory($ARGV[0]);
+# add a directory of Perl documents
+add_directory($ARGV[0]);
+
+# analyze all files in the database
+analyze();

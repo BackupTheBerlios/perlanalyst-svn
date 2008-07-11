@@ -7,9 +7,9 @@ use Test::More tests => 11;
 
 BEGIN {
 	my @modules = qw(Perl::Analysis::Static::Database
+		Perl::Analysis::Static::Analysis
 		Perl::Analysis::Static::DBI
 		Perl::Analysis::Static::File
-		Perl::Analysis::Static::FileList
 		Perl::Analysis::Static::Log
 		Perl::Analysis::Static::Plugin
 		Perl::Analysis::Static::Plugins
