@@ -2,60 +2,29 @@ package Perl::Analysis::Static::Plugin;
 
 =head1 NAME
 
-Perl::Analysis::Static::Plugin - Base class for Perl::Analysis::Static::Analysis Plugins
+Perl::Analysis::Static::Plugin - Base class for Perl::Analysis::Static plugins
 
 =head1 SYNOPSIS
 
-  # Implement a simple metrics package which counts up the
-  # use of each type of magic variable.
-  package Perl::Analysis::Static::Plugin::Magic;
-  
-  use base 'Perl::Analysis::Static::Plugin';
-  
-  # Creates the metric 'all_magic'.
-  # The total number of magic variables. 
-  sub metric_all_magic {
-      my ($self, $Document) = @_;
-      return scalar grep { $_->isa('PPI::Token::Magic') }
-                    $Document->tokens;
-  }
-  
-  # The number of $_ "scalar_it" magic vars
-  sub metric_scalar_it {
-      my ($self, $Document) = @_;
-      return scalar grep { $_->content eq '$_' }
-                    grep { $_->isa('PPI::Token::Magic') }
-                    $Document->tokens;
-  }
-  
-  # ... and so on, and so forth.
-  
-  1;
-
 =head1 DESCRIPTION
 
-The L<Perl::Analysis::Static::Analysis> system does not in and of itself generate any actual
-metrics data, it merely acts as a processing and storage engine.
+The L<Perl::Analysis::Static> system does not in and of itself generate any actual
+analysis data, it merely acts as a processing and storage engine.
 
-The generation of the actual metrics data is done via metrics packages,
-which as implemented as C<Perl::Analysis::Static::Plugin> sub-classes.
+The generation of the actual analysis data is done via plugins,
+which are implemented as C<Perl::Analysis::Static::Plugin> sub-classes.
 
-=head2 Implementing Your Own Metrics Package
+=head2 Implementing Your Own Analysis
 
-Implementing a metrics package is pretty easy.
+Implementing an analysis is pretty easy.
 
 First, create a Perl::Analysis::Static::Plugin::Something package, inheriting
 from C<Perl::Analysis::Static::Plugin>.
 
-The create a subroutine for each metric, named metric_$name.
+The create a subroutine analyze. It will be passed the L<PPI::Document> object
+to analyze.
 
-For each subroutine, you will be passed the plugin object itself, and the
-L<PPI::Document> object to generate the metric for.
-
-Return the metric value from the subroutine. And add as many metric_
-methods as you wish. Methods not matching the pattern /^metric_(.+)$/
-will be ignored, and you may use them for whatever support methods you
-wish.
+Return ...
 
 =head1 METHODS
 
@@ -67,7 +36,6 @@ use warnings;
 use base 'Perl::Analysis::Static::DBI';
 
 use Perl::Analysis::Static::Log qw(debug message);
-
 use Perl::Analysis::Static::Database qw(table_exists create_table);
 
 our $VERSION = 1.000;
@@ -201,7 +169,8 @@ sub process_file {
 
 	# returning undef is an error
 	unless ( defined $result ) {
-		die "result is not defined";
+		message("   no results");
+		return 1;
 	}
 
 	my $results;
