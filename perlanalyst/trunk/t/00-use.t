@@ -3,7 +3,7 @@
 use strict;
 use warnings;
 
-use Test::More tests => 11;
+use Test::More tests => 13;
 
 BEGIN {
 	my @modules = qw(Perl::Analysis::Static::Database
@@ -16,6 +16,8 @@ BEGIN {
 		Perl::Analysis::Static::Plugin::Location
 		Perl::Analysis::Static::Plugin::OncePerFile
 		Perl::Analysis::Static::Plugin::Location::FunctionCall
+		Perl::Analysis::Static::Plugin::Location::BuiltinCall
+		Perl::Analysis::Static::Plugin::Location::Package
 		Perl::Analysis::Static::Plugin::OncePerFile::One
 	);
 
