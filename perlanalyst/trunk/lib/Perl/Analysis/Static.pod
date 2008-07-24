@@ -1,0 +1,72 @@
+=head1 NAME
+
+Perl::Analysis::Static -- Static Analysis of Perl sources
+	
+=head1 SYNOPSIS	
+
+=head1 DESCRIPTION
+
+Perl::Analysis::Static is an extensible static source code
+analysis engine. Unlike L<Perl::Critic> is doesn't critique your
+code but just analyzes it. It tells you what files your codebase
+consists of, what package is declared where, where your variables
+are set and where your functions and methods are called.
+
+The core engine is extended via plugins that perform the actual
+analysis of your code. There is a wide range of plugins included
+in the distribution which are mostly simple analyzers using L<PPI>.  
+
+The results of each analysis are stored in a database for later
+use. Intended use of these results are:
+
+=over
+
+=item simple reporter
+
+Plain shell tool to report what the results are.
+
+=item source code generator
+
+Imagine a tool that generated test code for your freshly coded
+function.
+
+=item documentation tool
+
+Doxygen-like output for your codebase.
+
+=item refactoring tool
+
+Turn your block with free variables into a function with args. 
+
+=item ...
+
+=back 
+
+=head1 CONFIGURATION
+
+Sorry, there is no configuration file yet. :(
+
+=head1 WRITING PLUGINS
+
+=head1 PREREQUISITES
+
+Currently we need these modules:
+
+L<PPI>, L<Class::DBI>, L<Perl::Critic>, L<File::Find::Rule>,
+L<DBD::SQLite>. Class::DBI and Perl::Critic are used just for
+convenience, these might not be required in the future.
+
+=head1 CREDITS
+
+Adam Kennedy - For creating PPI, the heart and soul of
+Perl::Analysis::Static, and Perl::Metric, the module everything
+began with.
+
+=head1 SEE ALSO
+
+L<PPI>, L<Perl::Critic>
+
+=head1 AUTHOR
+
+=head1 COPYRIGHT
+
