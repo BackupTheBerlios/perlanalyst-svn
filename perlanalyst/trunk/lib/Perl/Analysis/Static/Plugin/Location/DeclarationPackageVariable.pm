@@ -33,10 +33,10 @@ use base 'Perl::Analysis::Static::Plugin::Location';
 our $VERSION = 1.000;
 
 # FIXME inherit
-sub _get_additional_columns {qw(line col package variable)}
+sub _get_additional_columns { qw(line col package variable) }
 
 # FIXME inherit
-sub _get_additional_columns_types {qw(INTEGER INTEGER STRING STRING)}
+sub _get_additional_columns_types { qw(INTEGER INTEGER STRING STRING) }
 
 =head2 analyze ($document)
 
@@ -49,20 +49,45 @@ sub analyze {
 	my ( $self, $document ) = @_;
 	my @entries;
 
-	my $statements = $document->find(
-		sub {
-
-			# package statement
-			$_[1]->isa('PPI::Statement::Package')
-				or
-
-				# variable declaration
-				$_[1]->isa('PPI::Statement::Variable');
-		}
-	);
+	my $statements = $document->find( \&_filter );
 
 	# return immediately if there are none of these
 	return unless $statements;
+
+	my $items = _build_item_list($statements);
+
+	# return undef if nothing was found
+	return unless $items;
+
+	for my $item (@$items) {
+		push @entries, _build_entry($item);
+	}
+
+	return \@entries;
+}
+
+sub _filter {
+
+	# package statement
+	$_[1]->isa('PPI::Statement::Package')
+	  or
+
+	  # variable declaration
+	  $_[1]->isa('PPI::Statement::Variable');
+}
+
+sub _build_item_list {
+	my ($statements) = @_;
+
+	# The package name is changed with the 'package'
+	# keyword. Variables before the first occurrence of
+	# this keyword are declared in the current package.
+	# Whatever that is...
+	my $package = '__CURRENT_PACKAGE__';
+
+	my $variable;
+
+	my @entries;
 
 	for my $statement (@$statements) {
 		if ( $statement->isa('PPI::Statement::Package') ) {
@@ -71,8 +96,9 @@ sub analyze {
 			my @schildren = $statement->schildren();
 
 			# name of the package is the second child
-			my $package = $schildren[1];
+			$package = $schildren[1];
 
+			$package = "$package";
 			print "Package: $package\n";
 			next;
 		}
@@ -85,63 +111,73 @@ sub analyze {
 			# the first child is the keyword, for package
 			# variables this has to be 'our'
 			next unless $schildren[0] eq 'our';
-			
+
 			# variable (or list of variables) is the second child
 			my $variables = $schildren[1];
 
 			if ( $variables->isa('PPI::Token::Symbol') ) {
-				_parse_token($variables);
-			} elsif ( $variables->isa('PPI::Structure::List') ) {
-				_parse_list($variables);
-			} else {
+				$variable = $variables;
+				print "** ${package}::$variable\n";
+				push @entries,
+				  {
+					package  => $package,
+					variable => $variable
+				  };
+			}
+			elsif ( $variables->isa('PPI::Structure::List') ) {
+
+				# list of symbols, separated by comma operator
+				# extract the symbols
+				my $symbols = $variables->find('PPI::Token::Symbol');
+
+				# now only the symbols are left
+				for my $symbol (@$symbols) {
+					$variable = $symbol;
+					print "** ${package}::$symbol\n";
+
+					push @entries,
+					  {
+						package  => $package,
+						variable => $variable
+					  };
+
+				}
+			}
+			else {
 				use Data::Dumper;
 				print "Class not supported: " . Dumper($variables);
 				next;
-			}    
+			}
+
 		}
 
-		# get location
-		my $location = $statement->location;
-		my $line     = $location->[0];
-		my $column   = $location->[2];
+		# now there are package names and variable PPI::Elements
+		# in @entries
 
-		# get significant children
-		my @schildren = $statement->schildren();
-
-		# name of the package is the second child
-		my $package = $schildren[1];
-
-		# build entry
-		my $entry =
-			{ line => $line, col => $column, package => $package };
-
-		# add entry
-		push @entries, $entry;
+		# now we have to turn those into the hashes that are returned
+		# from analyze
 	}
-
-	# return undef if nothing was found
-	return unless @entries;
-
-	# we have a list of packages, return reference to it
 	return \@entries;
+}    
 
-}
+# build entry from the internal entry
+sub _build_entry {
+	my ($entry) = @_;
 
-sub _parse_token {
-	my ($token) = @_;
+	my $variable = $entry->{variable};
+	my $package  = $entry->{package};
 
-	print "Variable: $token\n";
-}
+	# get location
+	my $location = $variable->location;
+	my $line     = $location->[0];
+	my $column   = $location->[2];
 
-sub _parse_list {
-	my ($list) = @_;
-	
-	# list of symbols, separated by comma operator
-	# extract the symbols
-	my $symbols=$list->find('PPI::Token::Symbol');
-	
-	# now only the symbols are left
-	print Dumper($symbols);
+	return {
+		line      => $line,
+		col       => $column,
+		package   => $package,
+		variable => "$variable"
+	};
 }
 
 1;
