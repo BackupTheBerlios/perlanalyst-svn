@@ -1,0 +1,14 @@
+#!/usr/bin/perl
+
+use PPI;
+use PPI::Document;
+use PPI::Dumper;
+
+# load document
+my $module = PPI::Document->new( $ARGV[0] );
+
+# create the dumper
+my $dumper = PPI::Dumper->new( $module );
+
+# dump the document
+$dumper->print();
