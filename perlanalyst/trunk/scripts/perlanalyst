@@ -1,5 +1,49 @@
 #!/usr/bin/perl
 
+=head1 NAME
+
+	perlanalyst -- perform static analysis on Perl documents
+
+=head1 DESCRIPTION
+
+This program is the main driver for the L<Perl::Analysis::Static>
+siute for modules. It performs a number of static analyses on
+Perl documents.
+
+=head1 OPTIONS
+
+=over
+
+=item B<--file>|B<-f> I<file>
+
+Analyze only this file.
+
+=item B<--dbfile>|B<-db> I<file>
+
+The sqlite database is stored in this file.
+
+=item B<--directory>|B<-d> I<directory>
+
+Add this directory to the list of files.
+
+=item B<help>
+
+Print usage information.
+
+=item B<--plugin>|B<-p> I<plugin name>
+
+If specified, only this plugin is run.
+
+=back
+
+=cut
+
+
+use strict;
+use warnings;
+
+use Getopt::Long;
+
 use Perl::Analysis::Static::Log qw(set_debug debug);
 use Perl::Analysis::Static::Database qw(set_database_file
 create_tables connect_to_database);
@@ -7,14 +51,35 @@ use Perl::Analysis::Static::Plugins qw(load_plugins);
 use Perl::Analysis::Static::File qw(add_directory);
 use Perl::Analysis::Static::Analysis qw(analyze);
 
-unless ($ARGV[0]) {
+our %parameters;
+
+# set defaults
+$parameters{configuration}="$ENV{HOME}/perlanalyst.cfg";
+$parameters{dbfile}="$ENV{HOME}/perlanalyst.sqlite";
+$parameters{directory}='.';
+$parameters{help}=1;
+
+# read file name
+GetOptions(\%parameters, 'configuration=s');
+
+# read configuration($parameters{configuration});
+
+# read other command line arguments
+read_arguments(\%parameters);
+
+if ($parameters{help}) {
+	usage();
+	exit;
+}
+
+unless ($parameters{directory}) {
 	die 'Which directory am I supposed to look in?';
 }
 
 # yes, we want debugging output
 set_debug();
 
-set_database_file("$ENV{HOME}/analysis.sqlite");
+set_database_file($parameters{dbfile});
 
 connect_to_database();
 
@@ -23,7 +88,49 @@ load_plugins();
 create_tables();
 
 # add a directory of Perl documents
-add_directory($ARGV[0]);
+add_directory($parameters{directory});
 
 # analyze all files in the database
 analyze();
+
+sub read_arguments {
+	my ($parameters)=@_;
+	
+	unless(GetOptions($parameters, 'file=s', 'directory=s',
+	'plugin=s', 'dbfile=s', 'help!')) {
+		die "Unable to read arguments";
+	}
+}
+
+sub usage {
+	print <<EOT
+perlanalyst
+
+file
+dbfile
+directory
+help
+plugin
+
+EOT
+}
+
+=head1 AUTHOR
+
+Gregor Goldbach E<lt>ggoldbach AT cpan DOT org<gt>
+
+=head1 SEE ALSO
+
+L<Perl::Analysis::Static>, L<PPI>
+
+=head1 COPYRIGHT
+
+Copyright 2008 Gregor Goldbach. All rights reserved.
+
+This program is free software; you can redistribute
+it and/or modify it under the same terms as Perl itself.
+
+The full text of the license can be found in the
+LICENSE file included with this module.
+
+=cut

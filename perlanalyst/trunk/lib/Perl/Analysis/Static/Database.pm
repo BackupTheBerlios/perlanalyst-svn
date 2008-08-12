@@ -21,12 +21,13 @@ use Class::DBI;
 
 use Perl::Analysis::Static::Plugins qw(get_plugins_that_can_analyze);
 use Perl::Analysis::Static::Log qw(message debug);
+use Perl::Analysis::Static::PluginList qw(create_plugin_list_table);
 
 use base qw(Exporter);
 
 our $VERSION   = 1.000;
 our @EXPORT_OK = qw(set_database_file connect_to_database
-	table_exists create_table create_tables);
+	table_exists create_table create_tables do_sql);
 
 # this is where everything's kept
 our $database_file;
@@ -123,6 +124,8 @@ Creates the index table and tables for the plugins.
 sub create_tables {
 	_create_index_table();
 
+    create_plugin_list_table();
+
 	# we only need to create tables for plugins that can analyze
 	my @plugins = get_plugins_that_can_analyze();
 	message( 'Creating tables for ' . scalar @plugins . ' plugin(s)' )
@@ -145,6 +148,24 @@ sub create_table {
 	}
 
 	return 1;
+}
+
+=head2 do_sql ($statement)
+
+This is just a wrapper for DBI's do() so we don't have to export
+the database handle.
+
+If it fails it croaks.
+
+=cut
+
+sub do_sql {
+	my ($statement)=@_;
+	
+	unless ( $dbh->do($statement) ) {
+		croak( "Error executing statement '$statement'", $dbh->errstr );
+	}
+
 }
 
 1;

@@ -14,5 +14,6 @@ WriteMakefile(
 		Module::Pluggable => 0
 	},
 	LICENSE      => 'perl',
+        EXE_FILES    => ['scripts/perlanalyst'],
 	PREREQ_FATAL => 1
 );
