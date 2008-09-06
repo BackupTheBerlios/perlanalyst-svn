@@ -18,7 +18,7 @@ use warnings;
 use base qw(Exporter);
 
 our $VERSION = 1.000;
-our @EXPORT_OK=qw(set_debug debug message);
+our @EXPORT_OK=qw(set_debug debug message error);
 
 {
 	my $debug;
@@ -57,6 +57,21 @@ sub message {
 	my ($message) = @_;
 
 	print $message."\n";	
+}
+
+=head2 error ($message)
+
+Print message to STDERR. Returns undef so it's safe to do the convenience call
+
+  return error('foo did baz');
+
+=cut
+
+sub error {
+	my ($message) = @_;
+
+	print STDERR $message."\n";	
+	return;
 }
 
 1;

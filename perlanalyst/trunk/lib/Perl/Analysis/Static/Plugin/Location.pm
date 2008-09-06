@@ -11,12 +11,9 @@ This class provides a base class for all plugins that perform
 an analysis that's unique per location. A location tells you in which line
 at which column the analysis found the thing.
 
-Deriving classes only have to override the method C<analyze> that's performing
-the actual analysis.
-
-FIXME
-To change
-it's type just override the method C<_get_additional_columns_types>.
+This base class basically just tells the system that the primary key consists
+of hex_id, line and column. The C<rows_for_file()> method returns the rows
+ordered by line and column.
 
 =cut
 
@@ -24,14 +21,41 @@ use strict;
 use warnings;
 
 use base 'Perl::Analysis::Static::Plugin';
+use Carp;
 
 our $VERSION=1.000;
 
+# line and column are key columns
 sub _get_additional_columns { qw(line col ) }
 
+# both are numeric
 sub _get_additional_columns_types { qw(NUMERIC NUMERIC) }
 
+# this is the primary key
 sub _get_primary_columns { qw(hex_id line col) }
+
+=head2 rows_for_file ($hex_id)
+
+Get all rows for the file with this hex_id. The rows are ordered by
+line and column.
+
+Returns undef if there are no rows, reference to list of rows otherwise.
+
+Overrides the method of class L<Perl::Analysis::Static::Plugin>.
+
+=cut
+
+sub rows_for_file {
+	my ($self, $hex_id)=@_;
+
+	croak "Argument error: Need hex_id" unless $hex_id;
+
+	my @rows=$self->retrieve_all(qq{hex_id = $hex_id order by line,col});
+	
+	return unless @rows;
+	
+	return \@rows;
+}
 
 1;
 

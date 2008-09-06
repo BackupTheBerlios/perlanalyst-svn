@@ -4,6 +4,14 @@
 
 	perlanalyst -- perform static analysis on Perl documents
 
+=head1 SYNOPSIS
+
+perlanalyst
+
+perlanalyst I<directory>
+
+perlanalyst I<directory> I<plugin list>
+
 =head1 DESCRIPTION
 
 This program is the main driver for the L<Perl::Analysis::Static>
@@ -22,11 +30,15 @@ Analyze only this file.
 
 The sqlite database is stored in this file.
 
+=item B<--debug>
+
+Print debugging output.
+
 =item B<--directory>|B<-d> I<directory>
 
 Add this directory to the list of files.
 
-=item B<help>
+=item B<--help>
 
 Print usage information.
 
@@ -34,10 +46,13 @@ Print usage information.
 
 If specified, only this plugin is run.
 
+=item B<--verbose>
+
+Be verbose when analyzing.
+
 =back
 
 =cut
-
 
 use strict;
 use warnings;
@@ -45,50 +60,62 @@ use warnings;
 use Getopt::Long;
 
 use Perl::Analysis::Static::Log qw(set_debug debug);
-use Perl::Analysis::Static::Database qw(set_database_file
-create_tables connect_to_database);
+use Perl::Analysis::Static::DB qw(connect_to_database);
 use Perl::Analysis::Static::Plugins qw(load_plugins);
 use Perl::Analysis::Static::File qw(add_directory);
 use Perl::Analysis::Static::Analysis qw(analyze);
+use Perl::Analysis::Static::Configuration qw(read_configuration);
+use Perl::Analysis::Static::PluginList qw(command_list_plugins);
+use Perl::Analysis::Static::PluginRanForFile qw(command_list_plugin_runs);
 
 our %parameters;
 
 # set defaults
 $parameters{configuration}="$ENV{HOME}/perlanalyst.cfg";
 $parameters{dbfile}="$ENV{HOME}/perlanalyst.sqlite";
-$parameters{directory}='.';
-$parameters{help}=1;
+$parameters{help}=0;
+$parameters{debug}=0;
 
 # read file name
-GetOptions(\%parameters, 'configuration=s');
+#GetOptions(\%parameters, 'configuration=s');
 
-# read configuration($parameters{configuration});
+read_configuration($parameters{configuration});
 
 # read other command line arguments
 read_arguments(\%parameters);
 
+# print usage if user calls for help
 if ($parameters{help}) {
 	usage();
 	exit;
 }
 
-unless ($parameters{directory}) {
-	die 'Which directory am I supposed to look in?';
+# do we want debugging output?
+set_debug() if $parameters{debug};
+
+connect_to_database($parameters{dbfile});
+
+# list plugins if asked to
+if ($parameters{'list-plugins'}) {
+	command_list_plugins();
+	exit;
 }
 
-# yes, we want debugging output
-set_debug();
-
-set_database_file($parameters{dbfile});
-
-connect_to_database();
+# list plugin runs if asked to
+if ($parameters{'list-plugin-runs'}) {
+	command_list_plugin_runs();
+	exit;
+}
 
 load_plugins();
 
 create_tables();
 
-# add a directory of Perl documents
-add_directory($parameters{directory});
+# add directory of Perl documents if provided
+if ($ARGV[0]) {
+	add_directory($ARGV[0]);
+}
+
 
 # analyze all files in the database
 analyze();
@@ -97,9 +124,11 @@ sub read_arguments {
 	my ($parameters)=@_;
 	
 	unless(GetOptions($parameters, 'file=s', 'directory=s',
-	'plugin=s', 'dbfile=s', 'help!')) {
+	'plugin=s', 'dbfile=s', 'help!', 'debug!', 'verbose!',
+	'list-plugins!', 'list-plugin-runs!')) {
 		die "Unable to read arguments";
 	}
+
 }
 
 sub usage {

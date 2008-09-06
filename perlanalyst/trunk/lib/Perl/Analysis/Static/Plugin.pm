@@ -35,8 +35,11 @@ use warnings;
 
 use base 'Perl::Analysis::Static::DBI';
 
+use Carp;
+
 use Perl::Analysis::Static::Log qw(debug message);
 use Perl::Analysis::Static::Database qw(table_exists create_table);
+use Perl::Analysis::Static::PluginList;
 
 our $VERSION = 1.000;
 
@@ -70,15 +73,15 @@ sub _get_primary_columns { ('hex_id') }
 
 =head2 new
 
-The C<new> constructor is quite trivial at this point, and is provided
-merely as a convenience. You don't really need to think about this.
+Creates a new instance and registers the plugin in the list of plugins.
 
 =cut
 
 sub new {
 	my $class = ref $_[0] ? ref shift: shift;
 	my $self = bless {}, $class;
-	$self;
+
+	return $self;
 }
 
 =head2 files
@@ -164,6 +167,9 @@ sub process_file {
 	#	$output =~ s{Perl::Analysis::Static::Plugin::}{};
 	my $output = $self->pretty_name();
 	message(" ($output)");
+
+	debug(" (registering in plugin list)");
+    Perl::Analysis::Static::PluginList::register_plugin($self->pretty_name(), $VERSION);
 
 	my $result = $self->analyze($document);
 
@@ -370,6 +376,31 @@ sub pretty_name {
 	$result =~ s{Perl::Analysis::Static::Plugin::}{};
 
 	return $result;
+}
+
+=head2 rows_for_file ($hex_id)
+
+Get all rows for the file with this hex_id.
+
+Returns undef if there are no rows, reference to list of rows otherwise.
+
+The rows are not ordered.
+
+Override this for plugins that have other columns as primary key (e.g. the
+Location plugin: see L<Perl::Analysis::Static::Plugin::Location>).
+
+=cut
+
+sub rows_for_file {
+	my ($self, $hex_id)=@_;
+
+	croak "Argument error: Need hex_id" unless $hex_id;
+
+	my @rows=$self->retrieve_all(qq{hex_id = $hex_id});
+	
+	return unless @rows;
+	
+	return \@rows;
 }
 
 1;

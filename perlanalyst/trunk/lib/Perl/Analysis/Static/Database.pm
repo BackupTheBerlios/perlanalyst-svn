@@ -21,7 +21,7 @@ use Class::DBI;
 
 use Perl::Analysis::Static::Plugins qw(get_plugins_that_can_analyze);
 use Perl::Analysis::Static::Log qw(message debug);
-use Perl::Analysis::Static::PluginList qw(create_plugin_list_table);
+#use Perl::Analysis::Static::PluginList qw(create_plugin_list_table);
 
 use base qw(Exporter);
 
@@ -43,6 +43,7 @@ our $dbh;
 sub set_database_file {
 	my ($file) = @_;
 
+	debug("Setting db file to '$file'");
 	$database_file = $file;
 }
 
@@ -115,6 +116,59 @@ END_SQL
 
 }
 
+=head2 _create_pluginlist_table
+
+Creates table C<pluginlist> where the informations for the list of plugins stored.
+
+=cut
+
+sub _create_pluginlist_table {
+
+	return 1 if table_exists('pluginlist');
+
+	# table for the files
+	my $create = <<'END_SQL';
+CREATE TABLE pluginlist (
+	name    TEXT    NOT NULL,
+	version INTEGER NOT NULL,
+	PRIMARY KEY (name)
+)
+END_SQL
+
+	# Execute the table creation SQL
+	$dbh->do($create)
+		or croak( "Error creating database table", $dbh->errstr );
+
+	return 1;
+
+}
+
+=head2 _create_pluginranforfile_table
+
+Creates table C<pluginranforfile>.
+
+=cut
+
+sub _create_pluginranforfile_table {
+
+	return 1 if table_exists('pluginranforfile');
+	
+	my $create = <<'END_SQL';
+CREATE TABLE pluginranforfile (
+	name    TEXT    NOT NULL,
+	file    TEXT NOT NULL,
+	PRIMARY KEY (name, file)
+)
+END_SQL
+
+	# Execute the table creation SQL
+	$dbh->do($create)
+		or croak( "Error creating database table", $dbh->errstr );
+
+	return 1;
+
+}
+
 =head2 create_tables
 
 Creates the index table and tables for the plugins.
@@ -124,8 +178,9 @@ Creates the index table and tables for the plugins.
 sub create_tables {
 	_create_index_table();
 
-    create_plugin_list_table();
-
+	_create_pluginlist_table();
+    _create_pluginranforfile_table();
+	
 	# we only need to create tables for plugins that can analyze
 	my @plugins = get_plugins_that_can_analyze();
 	message( 'Creating tables for ' . scalar @plugins . ' plugin(s)' )

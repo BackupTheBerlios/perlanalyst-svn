@@ -177,6 +177,8 @@ are no two files with the same hex_id. Since the hex_id is a MD5-sum
 over the contents of the files this means that no two files in the list
 have the same contents.
 
+Returns reference to list of file objects.
+
 =cut
 
 sub get_all_files {

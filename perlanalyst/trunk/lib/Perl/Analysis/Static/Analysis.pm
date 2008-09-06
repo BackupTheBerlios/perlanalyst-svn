@@ -13,17 +13,18 @@ Perl::Analysis::Static::Analysis
 use strict;
 use warnings;
 
-use Perl::Analysis::Static::Log qw(message);
-use Perl::Analysis::Static::Plugins qw(get_plugins_that_can_analyze);
-use Perl::Analysis::Static::File qw(get_all_files);
-
 use base qw(Exporter);
 
 use Carp;
 
+use Perl::Analysis::Static::Log qw(debug message);
+use Perl::Analysis::Static::Plugins qw(get_plugins_that_can_analyze);
+use Perl::Analysis::Static::File qw(get_all_files);
+use Perl::Analysis::Static::PluginList qw(plugin_has_run);
+use Perl::Analysis::Static::PluginRanForFile qw(plugin_ran_for_file);
+
 our $VERSION   = 1.000;
 our @EXPORT_OK = qw(analyze);
-
 
 =head1 FUNCTIONS
 
@@ -33,8 +34,11 @@ our @EXPORT_OK = qw(analyze);
 
 sub analyze {
 
+	my $plugins = _get_plugins_to_run();
+
 	# get all files from the database
-	my $files=get_all_files();
+	my $files = get_all_files();
+
 	# FIXME: check
 
 	message("These are the files I'll check:");
@@ -45,35 +49,25 @@ sub analyze {
 
 	# let all plugins process each file
 	for my $file (@sorted_files) {
-		_analyze_file($file);
+		for my $plugin (@$plugins) {
+			_analyze_file( $file, $plugin );
+			
+			debug(" (registering in plugin ran for file)");
+			plugin_ran_for_file($plugin, $file);
+		}
 	}
 
 	return 1;
 }
 
-
-=head2 analyze_file ($file)
-
-=cut
-
-sub analyze_file {
-	my ($file) = @_;
-
-	unless ($file) {
-		croak "Argument error: need file name";
-	}
-
-	_analyze_file($file);
-}
-
 =head1 INTERNAL FUNCTIONS
 
-=head2 _analyze_file ($file)
+=head2 _analyze_file ($file, $plugin)
 
 =cut
 
 sub _analyze_file {
-	my ($file) = @_;
+	my ( $file, $plugin ) = @_;
 
 	# Has the file been removed since the last run?
 	unless ( -f $file->path() ) {
@@ -85,22 +79,47 @@ sub _analyze_file {
 
 	# get PPI::Document
 	my $path     = $file->path();
-	my $document = PPI::Document->new($path);    
+	my $document = PPI::Document->new($path);
 	unless ($document) {
 		croak("failed to load Perl document '$path'");
 	}
 
 	# get plugins that can analyze and run these for the document
 	message("Processing '$file'");
-	for my $plugin ( get_plugins_that_can_analyze() ) {
-		unless ( $plugin->new->process_file( $document, $file->hex_id ) ) {
-			message('error');
-		}
+
+	unless ( $plugin->new->process_file( $document, $file->hex_id ) ) {
+		message('error');
+		return;
 	}
+
+	return 1;
 }
 
+=head2 _get_plugins_to_run ()
 
+Gets a list of plugins to run. A plugin has to be run if it is able to analyze and if
+it hasn't been run already. 
 
+Returns reference to list of plugins.
+
+=cut
+
+sub _get_plugins_to_run {
+	my @result;
+
+	for my $plugin ( get_plugins_that_can_analyze() ) {
+		if ( plugin_has_run($plugin) ) {
+			message("Plugin '"
+				  . $plugin->pretty_name()
+				  . "' has run, skipping it" );
+			next;
+		}
+		message("Plugin '$plugin' hasn't run, running it");
+		push @result, $plugin;
+	}
+
+	return \@result;
+}
 
 =head1 AUTHOR
 
